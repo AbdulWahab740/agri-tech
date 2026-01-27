@@ -88,17 +88,17 @@ export function ChatSidebar() {
 
     return (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetContent className="w-full sm:w-[420px] p-0 flex flex-col bg-[#F8F9F1]">
+            <SheetContent className="w-full sm:w-[420px] p-0 flex flex-col bg-background" showCloseButton={false}>
                 {/* Header */}
-                <SheetHeader className="p-4 bg-[#1B4332] text-white flex-shrink-0">
+                <SheetHeader className="p-4 bg-primary text-primary-foreground flex-shrink-0">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-white/10 rounded-lg">
                                 <Sprout className="w-5 h-5" />
                             </div>
                             <div>
-                                <SheetTitle className="text-white font-heading">AgriTech Assistant</SheetTitle>
-                                <p className="text-xs text-white/70">Your farming advisor</p>
+                                <SheetTitle className="text-primary-foreground font-heading">AgriTech Assistant</SheetTitle>
+                                <p className="text-xs text-primary-foreground/80">Your farming advisor</p>
                             </div>
                         </div>
                         <Button
@@ -114,10 +114,10 @@ export function ChatSidebar() {
 
                 {/* Context Badge */}
                 {district && crop && (
-                    <div className="px-4 py-2 bg-[#1B4332]/5 border-b border-[#E5E7EB] flex-shrink-0">
-                        <p className="text-xs text-[#6B7280]">
-                            Context: <span className="font-medium text-[#1B4332]">{district}</span> •{" "}
-                            <span className="font-medium text-[#D4A373]">{crop}</span>
+                    <div className="px-4 py-2 bg-muted/50 border-b border-border flex-shrink-0">
+                        <p className="text-xs text-muted-foreground">
+                            Context: <span className="font-medium text-primary">{district}</span> •{" "}
+                            <span className="font-medium text-secondary">{crop}</span>
                         </p>
                     </div>
                 )}
@@ -128,11 +128,11 @@ export function ChatSidebar() {
                         <MessageBubble key={message.id} message={message} />
                     ))}
                     {isTyping && (
-                        <div className="flex items-center gap-2 text-[#6B7280]">
+                        <div className="flex items-center gap-2 text-muted-foreground">
                             <div className="flex space-x-1">
-                                <div className="w-2 h-2 bg-[#1B4332] rounded-full animate-bounce" />
-                                <div className="w-2 h-2 bg-[#1B4332] rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
-                                <div className="w-2 h-2 bg-[#1B4332] rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+                                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
+                                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
+                                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
                             </div>
                             <span className="text-xs">AgriTech is typing...</span>
                         </div>
@@ -141,8 +141,8 @@ export function ChatSidebar() {
                 </div>
 
                 {/* Quick Actions */}
-                <div className="px-4 py-3 border-t border-[#E5E7EB] flex-shrink-0 bg-white">
-                    <p className="text-xs text-[#6B7280] mb-2">Quick Actions</p>
+                <div className="px-4 py-3 border-t border-border flex-shrink-0 bg-background">
+                    <p className="text-xs text-muted-foreground mb-2">Quick Actions</p>
                     <div className="flex flex-wrap gap-2">
                         <QuickActionChip
                             icon={<FlaskConical className="w-3 h-3" />}
@@ -163,7 +163,7 @@ export function ChatSidebar() {
                 </div>
 
                 {/* Input */}
-                <div className="p-4 border-t border-[#E5E7EB] bg-white flex-shrink-0">
+                <div className="p-4 border-t border-border bg-background flex-shrink-0">
                     <div className="flex items-center gap-2">
                         <input
                             type="text"
@@ -171,12 +171,12 @@ export function ChatSidebar() {
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleSendMessage(inputValue)}
                             placeholder="Ask about your farm..."
-                            className="flex-1 px-4 py-3 bg-[#F3F4F6] rounded-xl border border-[#E5E7EB] text-sm focus:outline-none focus:ring-2 focus:ring-[#1B4332] focus:border-transparent"
+                            className="flex-1 px-4 py-3 bg-muted/50 rounded-xl border border-input text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground placeholder:text-muted-foreground"
                         />
                         <Button
                             onClick={() => handleSendMessage(inputValue)}
                             disabled={!inputValue.trim()}
-                            className="w-12 h-12 rounded-xl bg-[#1B4332] hover:bg-[#2D6A4F] disabled:opacity-50"
+                            className="w-12 h-12 rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground"
                         >
                             <Send className="w-5 h-5" />
                         </Button>
@@ -196,15 +196,15 @@ function MessageBubble({ message }: { message: Message }) {
                 className={`
           max-w-[85%] rounded-2xl px-4 py-3
           ${isUser
-                        ? "bg-[#1B4332] text-white rounded-br-sm"
-                        : "bg-white border border-[#E5E7EB] text-[#1F2937] rounded-bl-sm shadow-sm"
+                        ? "bg-primary text-primary-foreground rounded-br-sm"
+                        : "bg-muted text-foreground border border-border rounded-bl-sm"
                     }
         `}
             >
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
 
-                <div className={`flex items-center justify-between mt-2 pt-2 border-t ${isUser ? "border-white/20" : "border-[#E5E7EB]"}`}>
-                    <span className={`text-xs ${isUser ? "text-white/60" : "text-[#6B7280]"}`}>
+                <div className={`flex items-center justify-between mt-2 pt-2 border-t ${isUser ? "border-primary-foreground/20" : "border-border"}`}>
+                    <span className={`text-xs ${isUser ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
                         {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </span>
 
@@ -212,12 +212,12 @@ function MessageBubble({ message }: { message: Message }) {
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <button className="flex items-center gap-1 text-xs text-[#6B7280] hover:text-[#1B4332] transition-colors">
+                                    <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
                                         <Info className="w-3 h-3" />
                                         Source
                                     </button>
                                 </TooltipTrigger>
-                                <TooltipContent side="top" className="bg-[#1B4332] text-white">
+                                <TooltipContent side="top" className="bg-primary text-primary-foreground">
                                     <p className="text-xs">Source: {message.source}</p>
                                 </TooltipContent>
                             </Tooltip>
@@ -243,9 +243,9 @@ function QuickActionChip({
             onClick={onClick}
             className="
         inline-flex items-center gap-1.5 px-3 py-1.5
-        bg-[#1B4332]/5 text-[#1B4332] text-xs font-medium
-        rounded-full border border-[#1B4332]/20
-        hover:bg-[#1B4332] hover:text-white
+        bg-primary/10 text-primary text-xs font-medium
+        rounded-full border border-primary/20
+        hover:bg-primary hover:text-primary-foreground
         transition-all duration-200
       "
         >

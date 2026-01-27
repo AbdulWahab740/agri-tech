@@ -1,10 +1,17 @@
 "use client";
 
-import { Sprout, TrendingUp, Shield, BarChart3 } from "lucide-react";
+import { Sprout, TrendingUp, Shield, BarChart3, ArrowRight, Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import {
+    Sheet,
+    SheetContent,
+    SheetTrigger,
+} from "@/components/ui/sheet";
 
 export function Hero() {
     return (
-        <section className="relative overflow-hidden bg-gradient-to-b from-[#1B4332] to-[#2D6A4F] py-20 lg:py-32">
+        <section className="relative overflow-hidden bg-gradient-to-b from-[#1B4332] to-[#2D6A4F] py-20 lg:py-32 flex items-center min-h-[85vh]">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-10">
                 <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -21,8 +28,54 @@ export function Hero() {
             <div className="absolute top-20 left-10 w-20 h-20 bg-[#52B788]/20 rounded-full blur-2xl animate-pulse" />
             <div className="absolute bottom-20 right-10 w-32 h-32 bg-[#D4A373]/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: "1s" }} />
 
+            {/* Navbar */}
+            <nav className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-50">
+                <div className="flex items-center gap-2">
+                    <span className="font-heading text-2xl font-bold text-white tracking-tight">ZaraiRadar</span>
+                </div>
+
+                {/* Desktop Nav */}
+                <div className="hidden md:flex items-center gap-4">
+                    <Link href="/login">
+                        <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10">
+                            Log in
+                        </Button>
+                    </Link>
+                    <Link href="/signup">
+                        <Button className="bg-white text-[#1B4332] hover:bg-gray-100 font-semibold shadow-md">
+                            Sign Up
+                        </Button>
+                    </Link>
+                </div>
+
+                {/* Mobile Nav */}
+                <div className="md:hidden">
+                    <Sheet>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
+                                <Menu className="w-6 h-6" />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="right">
+                            <div className="flex flex-col gap-4 mt-8">
+                                <Link href="/login" className="w-full">
+                                    <Button variant="outline" className="w-full justify-start">
+                                        Log in
+                                    </Button>
+                                </Link>
+                                <Link href="/signup" className="w-full">
+                                    <Button className="w-full justify-start bg-primary text-primary-foreground">
+                                        Create Account
+                                    </Button>
+                                </Link>
+                            </div>
+                        </SheetContent>
+                    </Sheet>
+                </div>
+            </nav>
+
             <div className="container mx-auto px-4 relative z-10">
-                <div className="max-w-4xl mx-auto text-center">
+                <div className="max-w-4xl mx-auto text-center mt-8">
                     {/* Badge */}
                     <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-8 animate-fade-in-up">
                         <Sprout className="w-4 h-4 text-[#52B788]" />
@@ -30,18 +83,33 @@ export function Hero() {
                     </div>
 
                     {/* Main Heading */}
-                    <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
-                        Data-Driven Agriculture
-                        <span className="block text-[#52B788]">for Punjab</span>
+                    <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight animate-fade-in-up [animation-delay:100ms]">
+                        Data-Driven Agriculture <br />
+                        <span className="text-[#52B788]">for Punjab</span>
                     </h1>
 
                     {/* Subheading */}
-                    <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-12 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+                    <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-12 animate-fade-in-up [animation-delay:200ms] leading-relaxed">
                         Empowering farmers with real-time weather insights, disease alerts, and precision farming recommendations based on trusted data sources.
                     </p>
 
+                    {/* CTA Buttons */}
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up [animation-delay:300ms] mb-16">
+                        <Link href="/signup" className="w-full sm:w-auto">
+                            <Button size="lg" className="w-full sm:w-auto bg-[#52B788] hover:bg-[#40916c] text-[#1B4332] font-bold text-base h-12 px-8 shadow-lg shadow-[#52B788]/20">
+                                Get Started Free
+                                <ArrowRight className="ml-2 w-5 h-5" />
+                            </Button>
+                        </Link>
+                        <Link href="/login" className="w-full sm:w-auto">
+                            <Button size="lg" variant="outline" className="w-full sm:w-auto border-white/30 text-white hover:bg-white/10 bg-transparent h-12 px-8">
+                                Existing User
+                            </Button>
+                        </Link>
+                    </div>
+
                     {/* Stats */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-3xl mx-auto animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-3xl mx-auto animate-fade-in-up [animation-delay:400ms]">
                         <StatCard icon={<BarChart3 className="w-5 h-5" />} value="98%" label="Accuracy Rate" />
                         <StatCard icon={<Shield className="w-5 h-5" />} value="24/7" label="Monitoring" />
                         <StatCard icon={<TrendingUp className="w-5 h-5" />} value="15%" label="Yield Increase" />
@@ -50,9 +118,9 @@ export function Hero() {
                 </div>
             </div>
 
-            {/* Bottom Wave */}
-            <div className="absolute bottom-0 left-0 right-0">
-                <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+            {/* Bottom Wave - Exactly as requested */}
+            <div className="absolute bottom-[-1px] left-0 right-0">
+                <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto block" preserveAspectRatio="none">
                     <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="#F8F9F1" />
                 </svg>
             </div>

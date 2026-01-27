@@ -31,11 +31,11 @@ export function DashboardHeader({ district, crop }: DashboardHeaderProps) {
                 <div className="flex items-center justify-between h-16 lg:h-20">
                     {/* Logo */}
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#1B4332] rounded-lg">
-                            <Sprout className="w-5 h-5 text-white" />
+                        <div className="p-2 bg-primary rounded-lg">
+                            <Sprout className="w-5 h-5 text-primary-foreground" />
                         </div>
-                        <span className="font-heading text-lg lg:text-xl font-bold text-[#1B4332] hidden sm:block">
-                            AgriTech Punjab
+                        <span className="font-heading text-lg lg:text-xl font-bold text-primary hidden sm:block">
+                            ZaraiRadar
                         </span>
                     </div>
 
@@ -44,10 +44,10 @@ export function DashboardHeader({ district, crop }: DashboardHeaderProps) {
                         <div className="flex items-center gap-4 lg:gap-6">
                             {/* Location */}
                             <div className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4 text-[#1B4332]" />
+                                <MapPin className="w-4 h-4 text-primary" />
                                 <div className="hidden sm:block">
-                                    <span className="text-xs text-[#6B7280]">Location</span>
-                                    <p className="text-sm font-medium text-[#1F2937]">{district}</p>
+                                    <span className="text-xs text-muted-foreground">Location</span>
+                                    <p className="text-sm font-medium text-foreground">{district}</p>
                                 </div>
                                 <span className="sm:hidden text-sm font-medium text-[#1F2937]">{district}</span>
                             </div>
@@ -56,12 +56,12 @@ export function DashboardHeader({ district, crop }: DashboardHeaderProps) {
 
                             {/* Crop */}
                             <div className="flex items-center gap-2">
-                                <Wheat className="w-4 h-4 text-[#D4A373]" />
+                                <Wheat className="w-4 h-4 text-secondary" />
                                 <div className="hidden sm:block">
-                                    <span className="text-xs text-[#6B7280]">Crop</span>
-                                    <p className="text-sm font-medium text-[#1F2937]">{crop}</p>
+                                    <span className="text-xs text-muted-foreground">Crop</span>
+                                    <p className="text-sm font-medium text-foreground">{crop}</p>
                                 </div>
-                                <span className="sm:hidden text-sm font-medium text-[#1F2937]">{crop}</span>
+                                <span className="sm:hidden text-sm font-medium text-foreground">{crop}</span>
                             </div>
                         </div>
 
@@ -69,7 +69,7 @@ export function DashboardHeader({ district, crop }: DashboardHeaderProps) {
                             variant="ghost"
                             size="sm"
                             onClick={handleChange}
-                            className="ml-2 text-[#1B4332] hover:text-[#2D6A4F] hover:bg-[#1B4332]/5"
+                            className="ml-2 text-primary hover:text-primary-dark hover:bg-primary/5"
                         >
                             <Settings className="w-4 h-4 lg:mr-1" />
                             <span className="hidden lg:inline">Change</span>

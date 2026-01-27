@@ -1,14 +1,14 @@
 import { Hero } from "@/components/landing/Hero";
-import { SelectionCard } from "@/components/landing/SelectionCard";
-import { DataIntegrity } from "@/components/landing/DataIntegrity";
+import { FeaturesSection } from "@/components/landing/FeaturesSection";
+import { HowItWorks } from "@/components/landing/HowItWorks";
 import { Footer } from "@/components/shared/Footer";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-white">
       <Hero />
-      <SelectionCard />
-      <DataIntegrity />
+      <FeaturesSection />
+      <HowItWorks />
       <Footer />
     </main>
   );

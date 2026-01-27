@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Sora } from "next/font/google";
+import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import { AgriProvider } from "@/context/AgriContext";
 import { ChatProvider } from "@/context/ChatContext";
@@ -10,9 +10,10 @@ const inter = Inter({
   display: "swap",
 });
 
-const sora = Sora({
+const poppins = Poppins({
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
-  variable: "--font-sora",
+  variable: "--font-poppins",
   display: "swap",
 });
 
@@ -34,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${sora.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${poppins.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
         <AgriProvider>
           <ChatProvider>

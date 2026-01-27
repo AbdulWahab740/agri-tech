@@ -5,23 +5,17 @@
    AGRI-TECH DESIGN SYSTEM
    ========================================================================== */
 
-/* 
-   Tailwind v4 Custom Variants
-   -------------------------------------------------------------------------- */
 @custom-variant dark (&:is(.dark *));
 
-/* 
-   Theme Configuration (Tailwind v4)
-   -------------------------------------------------------------------------- */
 @theme inline {
-  /* --- System Colors --- */
+  /* --- Base --- */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* --- Component Colors --- */
+  /* --- Components --- */
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
@@ -32,162 +26,135 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
 
-  /* --- Brand Colors --- */
+  /* --- Brand --- */
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
 
-  /* --- Typography --- */
+  /* --- Fonts --- */
   --font-sans: var(--font-inter);
-  --font-heading: var(--font-sora);
+  --font-heading: var(--font-poppins);
   --font-mono: var(--font-geist-mono);
 
-  /* --- Sidebar Colors --- */
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-
-  /* --- Data Visualization --- */
+  /* --- Charts --- */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
-  /* --- Domain Specific: Agri-Tech Palette --- */
-  --color-agri-primary: #1B4332;
-  --color-agri-primary-light: #2D6A4F;
-  --color-agri-primary-dark: #0D2818;
-  --color-agri-secondary: #D4A373;
-  --color-agri-secondary-light: #E9C5A0;
-  --color-agri-background: #F8F9F1;
-  --color-agri-accent: #40916C;
-  --color-agri-success: #52B788;
-  --color-agri-warning: #E9C46A;
-  --color-agri-danger: #E63946;
-  --color-agri-info: #457B9D;
-  --color-agri-border: #E5E7EB;
-  --color-agri-text: #1F2937;
-  --color-agri-text-muted: #6B7280;
-
-  /* --- Radius Utilities --- */
+  /* --- Extended Semantic Palette --- */
+  --color-agri-success: #15803d; /* Green 700 */
+  --color-agri-warning: #ca8a04; /* Yellow 600 */
+  --color-agri-danger: #b91c1c;  /* Red 700 */
+  --color-agri-info: #0369a1;    /* Sky 700 */
+  
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
 }
-
-/* ==========================================================================
-   CSS VARIABLE DEFINITIONS
-   ========================================================================== */
 
 :root {
-  /* Base Settings */
-  --radius: 0.625rem;
-  
-  /* Theme: Light (Agriculture Professional) */
-  --background: #F8F9F1;
-  --foreground: #1F2937;
+  --radius: 0.5rem;
 
-  --card: #FFFFFF;
-  --card-foreground: #1F2937;
+  /* Theme: Clean Professional Agriculture */
+  /* Backgrounds: Pure White to Light Gray */
+  --background: #ffffff;
+  --foreground: #0f172a; /* Slate 900 */
 
-  --popover: #FFFFFF;
-  --popover-foreground: #1F2937;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
 
-  --primary: #1B4332;
-  --primary-foreground: #FFFFFF;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
 
-  --secondary: #D4A373;
-  --secondary-foreground: #1F2937;
+  /* Primary: Deep Natural Green */
+  --primary: #15803d; /* Green 700 */
+  --primary-foreground: #ffffff;
 
-  --muted: #F3F4F6;
-  --muted-foreground: #6B7280;
+  /* Secondary: Warm Harvest Gold (Accents) */
+  --secondary: #d97706; /* Amber 600 */
+  --secondary-foreground: #ffffff;
 
-  --accent: #40916C;
-  --accent-foreground: #FFFFFF;
+  /* Muted: Subtle Grays */
+  --muted: #f1f5f9; /* Slate 100 */
+  --muted-foreground: #64748b; /* Slate 500 */
 
-  --destructive: #E63946;
+  /* Accent: Very Light Green */
+  --accent: #f0fdf4; /* Green 50 */
+  --accent-foreground: #15803d;
 
-  --border: #E5E7EB;
-  --input: #E5E7EB;
-  --ring: #1B4332;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: #e2e8f0; /* Slate 200 */
+  --input: #e2e8f0;
+  --ring: #15803d;
 
   /* Charts */
-  --chart-1: #1B4332;
-  --chart-2: #40916C;
-  --chart-3: #52B788;
-  --chart-4: #D4A373;
-  --chart-5: #E9C46A;
-
+  --chart-1: #15803d;
+  --chart-2: #ca8a04;
+  --chart-3: #1d4ed8;
+  --chart-4: #b91c1c;
+  --chart-5: #0f172a;
+  
   /* Sidebar */
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #1F2937;
-  --sidebar-primary: #1B4332;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F3F4F6;
-  --sidebar-accent-foreground: #1F2937;
-  --sidebar-border: #E5E7EB;
-  --sidebar-ring: #1B4332;
+  --sidebar: #ffffff; 
+  --sidebar-foreground: #0f172a; 
+  --sidebar-primary: #15803d; 
+  --sidebar-primary-foreground: #ffffff; 
+  --sidebar-accent: #f1f5f9; 
+  --sidebar-accent-foreground: #15803d; 
+  --sidebar-border: #e2e8f0; 
+  --sidebar-ring: #15803d; 
 }
 
-/* Theme: Dark Mode */
 .dark {
-  --background: #0D1B0F;
-  --foreground: #F8F9F1;
+  --background: #020617; /* Slate 950 */
+  --foreground: #f8fafc; /* Slate 50 */
 
-  --card: #1B4332;
-  --card-foreground: #F8F9F1;
+  --card: #0f172a; /* Slate 900 */
+  --card-foreground: #f8fafc;
 
-  --popover: #1B4332;
-  --popover-foreground: #F8F9F1;
+  --popover: #0f172a;
+  --popover-foreground: #f8fafc;
 
-  --primary: #52B788;
-  --primary-foreground: #0D1B0F;
+  --primary: #22c55e; /* Green 500 */
+  --primary-foreground: #020617;
 
-  --secondary: #D4A373;
-  --secondary-foreground: #0D1B0F;
+  --secondary: #f59e0b; /* Amber 500 */
+  --secondary-foreground: #020617;
 
-  --muted: #2D6A4F;
-  --muted-foreground: #A7C4BC;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
 
-  --accent: #40916C;
-  --accent-foreground: #F8F9F1;
+  --accent: #1e293b;
+  --accent-foreground: #f8fafc;
 
-  --destructive: #FF6B6B;
+  --destructive: #7f1d1d;
+  --destructive-foreground: #f8fafc;
 
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.15);
-  --ring: #52B788;
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #22c55e;
+  
+  --chart-1: #22c55e;
+  --chart-2: #f59e0b;
+  --chart-3: #3b82f6;
+  --chart-4: #ef4444;
+  --chart-5: #e2e8f0;
 
-  --chart-1: #52B788;
-  --chart-2: #40916C;
-  --chart-3: #2D6A4F;
-  --chart-4: #D4A373;
-  --chart-5: #E9C46A;
-
-  --sidebar: #1B4332;
-  --sidebar-foreground: #F8F9F1;
-  --sidebar-primary: #52B788;
-  --sidebar-primary-foreground: #0D1B0F;
-  --sidebar-accent: #2D6A4F;
-  --sidebar-accent-foreground: #F8F9F1;
-  --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: #52B788;
+  --sidebar: #0f172a; 
+  --sidebar-foreground: #f8fafc; 
+  --sidebar-primary: #22c55e; 
+  --sidebar-primary-foreground: #020617; 
+  --sidebar-accent: #1e293b; 
+  --sidebar-accent-foreground: #f8fafc; 
+  --sidebar-border: #1e293b; 
+  --sidebar-ring: #22c55e; 
 }
-
-/* ==========================================================================
-   BASE & COMPONENTS
-   ========================================================================== */
 
 @layer base {
   * {
@@ -198,95 +165,15 @@
     font-family: var(--font-inter);
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-sora);
+    font-family: var(--font-poppins);
   }
 }
 
-/* 
-   Scrollbar Customization
-   -------------------------------------------------------------------------- */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--muted);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--agri-primary);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--agri-primary-light);
-}
-
-/* 
-   Animations
-   -------------------------------------------------------------------------- */
-@keyframes pulse-warning {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: scale(1.05);
-  }
-}
-
-@keyframes slide-in-right {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
+/* Animations */
 @keyframes fade-in-up {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
+.animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
 
-/* Animation Utilities */
-.animate-pulse-warning {
-  animation: pulse-warning 2s ease-in-out infinite;
-}
-
-.animate-slide-in-right {
-  animation: slide-in-right 0.3s ease-out forwards;
-}
-
-.animate-fade-in-up {
-  animation: fade-in-up 0.4s ease-out forwards;
-}
-
-/* 
-   Component Classes
-   -------------------------------------------------------------------------- */
-.agri-card {
-  @apply bg-card rounded-xl shadow-sm transition-all duration-200;
-  border: 1px solid var(--border);
-}
-
-.agri-card:hover {
-  @apply shadow-md;
-  transform: translateY(-2px);
-}
-
-/* Text Balance */
-.text-balance {
-  text-wrap: balance;
-}
+.text-balance { text-wrap: balance; }

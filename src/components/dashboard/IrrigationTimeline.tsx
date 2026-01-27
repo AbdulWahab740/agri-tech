@@ -19,36 +19,51 @@ interface DayData {
 
 // Simulated weekly irrigation schedule
 const getIrrigationSchedule = (crop: Crop): DayData[] => {
-    const baseSchedule: DayData[] = [
-        { day: "Mon", date: 27, status: "water", label: "Next Water" },
-        { day: "Tue", date: 28, status: "sun", label: "Rest" },
-        { day: "Wed", date: 29, status: "sun", label: "Rest" },
-        { day: "Thu", date: 30, status: "water", label: "Irrigate" },
-        { day: "Fri", date: 31, status: "rain", label: "Expected Rain" },
-        { day: "Sat", date: 1, status: "sun", label: "Rest" },
-        { day: "Sun", date: 2, status: "water", label: "Irrigate" },
-    ];
-    return baseSchedule;
+    const today = new Date();
+    const schedule: DayData[] = [];
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    for (let i = 0; i < 7; i++) {
+        const current = new Date(today);
+        current.setDate(today.getDate() + i);
+
+        const dayName = days[current.getDay()];
+        const dateNum = current.getDate();
+
+        // Simple mock logic for status
+        // Irrigate on 1st and 4th day, Rain on 5th, Sun on others
+        let status: DayStatus = "sun";
+        if (i === 0 || i === 3) status = "water";
+        if (i === 4) status = "rain";
+
+        schedule.push({
+            day: dayName,
+            date: dateNum,
+            status,
+            label: status === "water" ? "Irrigate" : status === "rain" ? "Rain" : "Rest"
+        });
+    }
+    return schedule;
 };
 
 const statusConfig: Record<DayStatus, { icon: React.ReactNode; bg: string; iconColor: string; border: string }> = {
     water: {
         icon: <Droplets className="w-5 h-5" />,
-        bg: "bg-[#457B9D]/10",
-        iconColor: "text-[#457B9D]",
-        border: "border-[#457B9D]/30",
+        bg: "bg-agri-info/10",
+        iconColor: "text-agri-info",
+        border: "border-agri-info/30",
     },
     sun: {
         icon: <Sun className="w-5 h-5" />,
-        bg: "bg-[#E9C46A]/10",
-        iconColor: "text-[#D4A373]",
-        border: "border-[#E9C46A]/30",
+        bg: "bg-secondary/10",
+        iconColor: "text-secondary",
+        border: "border-secondary/30",
     },
     rain: {
         icon: <CloudRain className="w-5 h-5" />,
-        bg: "bg-[#52B788]/10",
-        iconColor: "text-[#52B788]",
-        border: "border-[#52B788]/30",
+        bg: "bg-agri-success/10",
+        iconColor: "text-agri-success",
+        border: "border-agri-success/30",
     },
 };
 
@@ -59,11 +74,11 @@ export function IrrigationTimeline({ crop }: IrrigationTimelineProps) {
         <Card className="border-[#E5E7EB] shadow-sm hover:shadow-md transition-shadow duration-300">
             <CardHeader className="pb-2">
                 <CardTitle className="font-heading text-lg flex items-center gap-2">
-                    <div className="p-2 bg-[#457B9D]/10 rounded-lg">
-                        <Droplets className="w-5 h-5 text-[#457B9D]" />
+                    <div className="p-2 bg-agri-info/10 rounded-lg">
+                        <Droplets className="w-5 h-5 text-agri-info" />
                     </div>
                     Weekly Irrigation Plan
-                    <span className="text-xs font-normal text-[#6B7280] ml-auto">Jan 27 - Feb 2</span>
+                    {/* Dynamic date range could be added here if needed */}
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -79,12 +94,12 @@ export function IrrigationTimeline({ crop }: IrrigationTimelineProps) {
                                 className={`
                   relative text-center p-3 rounded-xl transition-all duration-300
                   ${config.bg} ${config.border} border
-                  ${isToday ? "ring-2 ring-[#1B4332] ring-offset-2" : ""}
+                  ${isToday ? "ring-2 ring-primary ring-offset-2" : ""}
                   hover:scale-105 cursor-pointer
                 `}
                             >
                                 {isToday && (
-                                    <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-[#1B4332] text-white text-[10px] rounded-full font-medium">
+                                    <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-primary text-primary-foreground text-[10px] rounded-full font-medium">
                                         Today
                                     </span>
                                 )}
@@ -99,20 +114,20 @@ export function IrrigationTimeline({ crop }: IrrigationTimelineProps) {
                 </div>
 
                 {/* Legend */}
-                <div className="flex flex-wrap justify-center gap-4 mt-4 pt-4 border-t border-[#E5E7EB]">
-                    <LegendItem icon={<Droplets className="w-4 h-4 text-[#457B9D]" />} label="Irrigate" />
-                    <LegendItem icon={<Sun className="w-4 h-4 text-[#D4A373]" />} label="Rest Day" />
-                    <LegendItem icon={<CloudRain className="w-4 h-4 text-[#52B788]" />} label="Rain Expected" />
+                <div className="flex flex-wrap justify-center gap-4 mt-4 pt-4 border-t border-border">
+                    <LegendItem icon={<Droplets className="w-4 h-4 text-agri-info" />} label="Irrigate" />
+                    <LegendItem icon={<Sun className="w-4 h-4 text-secondary" />} label="Rest Day" />
+                    <LegendItem icon={<CloudRain className="w-4 h-4 text-agri-success" />} label="Rain Expected" />
                 </div>
 
                 {/* Next Irrigation Info */}
-                <div className="mt-4 p-3 bg-[#457B9D]/5 rounded-lg border border-[#457B9D]/20 flex items-center gap-3">
-                    <div className="p-2 bg-[#457B9D] rounded-lg">
+                <div className="mt-4 p-3 bg-agri-info/5 rounded-lg border border-agri-info/20 flex items-center gap-3">
+                    <div className="p-2 bg-agri-info rounded-lg">
                         <Droplets className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                        <p className="text-sm font-medium text-[#1F2937]">Next Water: Today (Mon, Jan 27)</p>
-                        <p className="text-xs text-[#6B7280]">Recommended: Morning irrigation, 2-3 inches depth</p>
+                        <p className="text-sm font-medium text-foreground">Next Water: Today</p>
+                        <p className="text-xs text-muted-foreground">Recommended: Morning irrigation, 2-3 inches depth</p>
                     </div>
                 </div>
             </CardContent>
