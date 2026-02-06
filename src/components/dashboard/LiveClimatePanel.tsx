@@ -3,98 +3,32 @@
 import { CloudRain, Thermometer, Wind, Droplets, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect, useCallback } from "react";
 import { useAgri } from "@/context/AgriContext";
 import { getTranslation } from "@/lib/i18n";
 
-/** API response: ClimateData (temp_c, humidity, wind_kph, chance_of_rain, condition, datetime) */
-interface ClimateDataItem {
-    datetime: string;
-    temp_c: number;
-    humidity: number;
-    wind_kph: number;
-    chance_of_rain: number;
-    condition: string;
-}
-
-interface ClimateResponse {
-    district: string;
-    province: string;
-    lat: number;
-    lon: number;
-    data: ClimateDataItem[];
-}
-
 export function LiveClimatePanel() {
-    const { language } = useAgri();
+    const { language, dashboardData, isDashboardLoading, refreshDashboard } = useAgri();
     const t = (key: any) => getTranslation(language, key);
 
-    const [lastUpdated, setLastUpdated] = useState("justNow");
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [climate, setClimate] = useState<ClimateResponse | null>(null);
-
-    const fetchClimate = useCallback(async () => {
-        if (typeof window === "undefined") return;
-        setLoading(true);
-        setError(null);
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
-        try {
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/dashboard/climate`,
-                {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        ...(typeof window !== "undefined" && localStorage.getItem("access_token")
-                            ? { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
-                            : {}),
-                    },
-                    signal: controller.signal,
-                }
-            );
-            clearTimeout(timeoutId);
-            if (res.status === 401) {
-                setLoading(false);
-                if (typeof window !== "undefined") {
-                    localStorage.removeItem("access_token");
-                    localStorage.removeItem("user_id");
-                    localStorage.removeItem("user_email");
-                    localStorage.removeItem("username");
-                    window.location.href = "/login";
-                }
-                return;
-            }
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                throw new Error(err.detail || err.error || "Failed to load climate");
-            }
-            const json: ClimateResponse = await res.json();
-            setClimate(json);
-            setLastUpdated("justNow");
-        } catch (e) {
-            const message = e instanceof Error ? e.message : "Failed to load climate";
-            setError(e instanceof Error && e.name === "AbortError" ? "Request timed out. Try again." : message);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (typeof window === "undefined") return;
-        fetchClimate();
-    }, [fetchClimate]);
+    const item = dashboardData?.weather?.current;
+    const profile = dashboardData?.profile;
+    const location = profile ? [profile.district, profile.province].filter(Boolean).join(", ") : "";
 
     const handleRefresh = () => {
-        fetchClimate();
+        refreshDashboard();
     };
 
-    const item = climate?.data?.[0];
-    const location = climate ? [climate.district, climate.province].filter(Boolean).join(", ") : "";
+    if (isDashboardLoading && !dashboardData) {
+        return (
+            <Card className="border-gray-100 shadow-sm rounded-2xl bg-white overflow-hidden h-full animate-pulse">
+                <CardHeader className="h-16 border-b border-gray-50" />
+                <CardContent className="h-48" />
+            </Card>
+        );
+    }
 
     return (
-        <Card className="border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl bg-white overflow-hidden h-full">
+        <Card className="border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl bg-white overflow-hidden">
             <CardHeader className="pb-4 pt-6 px-6 flex flex-row items-center justify-between border-b border-gray-50">
                 <CardTitle className="font-heading text-lg flex items-center gap-3 text-[#1B4332]">
                     <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
@@ -103,32 +37,19 @@ export function LiveClimatePanel() {
                     {t('liveClimate')}
                 </CardTitle>
                 <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide hidden sm:inline-block">
-                        {t('updated')} {t(lastUpdated)}
-                    </span>
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={handleRefresh}
-                        disabled={loading}
+                        disabled={isDashboardLoading}
                         className="h-8 w-8 hover:bg-gray-50 rounded-full"
                     >
-                        <RefreshCw className={`w-4 h-4 text-gray-400 ${loading ? "animate-spin" : ""}`} />
+                        <RefreshCw className={`w-4 h-4 text-gray-400 ${isDashboardLoading ? "animate-spin" : ""}`} />
                     </Button>
                 </div>
             </CardHeader>
             <CardContent className="p-6">
-                {error && (
-                    <div className="mb-4 py-3 px-4 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm">
-                        {error}
-                    </div>
-                )}
-                {loading && !climate && (
-                    <div className="flex items-center justify-center py-12">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1B4332]" />
-                    </div>
-                )}
-                {!loading && item && (
+                {item ? (
                     <>
                         <div className="flex items-center justify-between mb-8">
                             <div className="flex items-center gap-4">
@@ -178,8 +99,7 @@ export function LiveClimatePanel() {
                             />
                         </div>
                     </>
-                )}
-                {!loading && !item && !error && (
+                ) : (
                     <div className="py-8 text-center text-gray-500 text-sm">
                         No climate data. Complete your farm setup first.
                     </div>
