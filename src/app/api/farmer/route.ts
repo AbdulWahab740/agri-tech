@@ -6,7 +6,7 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        // Map frontend fields to backend schema
+        // Map frontend fields to backend schema (days_after_sowing comes from frontend)
         const farmerData = {
             user_id: body.user_id,
             province: body.province,
@@ -14,7 +14,11 @@ export async function POST(request: Request) {
             crop: body.crop,
             phone: body.phone,
             stage: body.cropStage,
-            area: body.farmSize || "Not specified"
+            area: body.farmSize || "Not specified",
+            crop_start_date: body.crop_start_date || null,
+            soil_type: body.soil_type || "Not specified",
+            irrigation_type: body.irrigation_type || "Not specified",
+            days_after_sowing: typeof body.days_after_sowing === 'number' ? body.days_after_sowing : 0,
         };
 
         const response = await fetch(`${BACKEND_URL}/farmer-info`, {

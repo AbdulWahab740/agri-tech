@@ -23,10 +23,12 @@ const DISTRICTS: Record<string, string[]> = {
 const CROPS = ["Wheat", "Rice", "Cotton", "Sugarcane", "Maize"];
 const STAGES = ["Sowing", "Vegetative", "Flowering", "Harvest"];
 const SIZES = ["Small (< 5 acres)", "Medium (5-25 acres)", "Large (> 25 acres)"];
+const IRRIGATION_TYPES = ["Canal", "Tube Well", "Rainfed"];
+const SOIL_TYPES = ["Loamy", "Sandy", "Clay"];
 
 export default function ProfileSetupPage() {
     const router = useRouter();
-    const { setCrop, setProvince, setDistrict, setCropStage, setFarmSize } = useAgri();
+    const { setCrop, setProvince, setDistrict, setCropStage, setFarmSize, setSoilType, setIrrigationType } = useAgri();
 
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -36,6 +38,9 @@ export default function ProfileSetupPage() {
         farmSize: "",
         cropStage: "",
         phone: "",
+        cropStartDate: "",
+        soilType: "",
+        irrigationType: "",
     });
 
     const handleProvinceChange = (value: string) => {
@@ -49,6 +54,18 @@ export default function ProfileSetupPage() {
 
         setIsLoading(true);
         try {
+            // Calculate days_after_sowing on frontend
+            let daysAfterSowing = 0;
+            if (formData.cropStartDate) {
+                try {
+                    const startDate = new Date(formData.cropStartDate);
+                    const today = new Date();
+                    const diffTime = today.getTime() - startDate.getTime();
+                    daysAfterSowing = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                } catch (e) {
+                    daysAfterSowing = 0;
+                }
+            }
             const response = await apiClient.post("/farmer-info", {
                 province: formData.province,
                 district: formData.district,
@@ -56,11 +73,29 @@ export default function ProfileSetupPage() {
                 phone: formData.phone,
                 stage: formData.cropStage,
                 area: formData.farmSize || "Not specified",
+                crop_start_date: formData.cropStartDate || null,
+                soil_type: formData.soilType || "Not specified",
+                irrigation_type: formData.irrigationType || "Not specified",
+                days_after_sowing: daysAfterSowing,
             });
 
             if (!response.ok) {
-                const err = await response.json().catch(() => ({}));
-                throw new Error(err.detail || err.error || "Failed to save profile");
+                let errMsg = "Failed to save profile";
+                try {
+                    const err = await response.json();
+                    if (err && (err.detail || err.error)) {
+                        errMsg = err.detail || err.error;
+                    } else if (typeof err === "string") {
+                        errMsg = err;
+                    } else if (Array.isArray(err)) {
+                        errMsg = err.map((e) => e.detail || e.error || JSON.stringify(e)).join(", ");
+                    }
+                } catch (e) {
+                    // ignore JSON parse error
+                }
+                console.error("Profile setup failed:", errMsg);
+                alert(errMsg);
+                return;
             }
 
             // Update Context (which will sync to localStorage automatically)
@@ -68,12 +103,20 @@ export default function ProfileSetupPage() {
             setProvince(formData.province);
             setDistrict(formData.district);
             setCropStage(formData.cropStage);
+            setSoilType(formData.soilType);
+            setIrrigationType(formData.irrigationType);
+
             if (formData.farmSize) setFarmSize(formData.farmSize);
 
             // Redirect to dashboard
             router.push("/dashboard");
-        } catch (error) {
-            console.error("Profile setup failed", error);
+        } catch (error: any) {
+            let errMsg = error?.message || "Profile setup failed";
+            if (typeof error === "object" && error !== null && "message" in error) {
+                errMsg = error.message;
+            }
+            console.error("Profile setup failed:", errMsg);
+            alert(errMsg);
         } finally {
             setIsLoading(false);
         }
@@ -172,20 +215,17 @@ export default function ProfileSetupPage() {
                         </div>
                     </div>
 
-                    {/* Farm Size & Phone */}
+                    {/* Farm Size, Phone, Crop Start Date, Soil Type, Irrigation Type */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div className="space-y-2">
-                            <Label className="text-sm font-medium text-gray-700">Farm Size <span className="text-muted-foreground font-normal opacity-70">(Optional)</span></Label>
-                            <Select onValueChange={(val) => setFormData({ ...formData, farmSize: val })} value={formData.farmSize}>
-                                <SelectTrigger className="h-11 bg-white border-gray-200 focus:ring-primary/20 focus:border-primary transition-all">
-                                    <SelectValue placeholder="Select Farm Size" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {SIZES.map((s) => (
-                                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Label className="text-sm font-medium text-gray-700">Farm Size </Label>
+                            <Input
+                                type="number"
+                                placeholder="Enter the area in acres (e.g., 10)"
+                                value={formData.farmSize}
+                                onChange={(e) => setFormData({ ...formData, farmSize: e.target.value })}
+                                className="h-11 bg-white border-gray-200 focus:ring-primary/20 focus:border-primary transition-all"
+                            />
                         </div>
                         <div className="space-y-2">
                             <Label className="text-sm font-medium text-gray-700">Phone Number</Label>
@@ -196,6 +236,43 @@ export default function ProfileSetupPage() {
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                 className="h-11 bg-white border-gray-200 focus:ring-primary/20 focus:border-primary transition-all"
                             />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">Crop Start Date</Label>
+                            <Input
+                                type="date"
+                                value={formData.cropStartDate}
+                                onChange={(e) => setFormData({ ...formData, cropStartDate: e.target.value })}
+                                className="h-11 bg-white border-gray-200 focus:ring-primary/20 focus:border-primary transition-all"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">Soil Type</Label>
+                            <Select onValueChange={(val) => setFormData({ ...formData, soilType: val })} value={formData.soilType}>
+                                <SelectTrigger className="h-11 bg-white border-gray-200 focus:ring-primary/20 focus:border-primary transition-all">
+                                    <SelectValue placeholder="Select Soil Type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {SOIL_TYPES.map((s) => (
+                                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700">Irrigation Type</Label>
+                            <Select onValueChange={(val) => setFormData({ ...formData, irrigationType: val })} value={formData.irrigationType}>
+                                <SelectTrigger className="h-11 bg-white border-gray-200 focus:ring-primary/20 focus:border-primary transition-all">
+                                    <SelectValue placeholder="Select Irrigation Type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {IRRIGATION_TYPES.map((s) => (
+                                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
 

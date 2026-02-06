@@ -7,37 +7,99 @@ import { getTranslation } from "@/lib/i18n";
 
 interface FertilizerCardProps {
     crop: Crop;
+    userId?: string;
+    area?: number;
 }
 
-// NPK ratios based on crop
-const getNPKData = (crop: Crop, language: string) => {
-    const isUrdu = language === 'ur';
-    const npkRatios: Record<Crop, { nitrogen: number; phosphorus: number; potassium: number; notes: string }> = {
-        Wheat: {
-            nitrogen: 120,
-            phosphorus: 60,
-            potassium: 40,
-            notes: isUrdu
-                ? "نائٹروجن کو الگ الگ خوراکوں میں ڈالیں: 50٪ بوائی کے وقت، 50٪ ٹلیرنگ کے مرحلے پر۔"
-                : "Apply nitrogen in split doses: 50% at sowing, 50% at tillering stage",
-        },
-        Cotton: {
-            nitrogen: 150,
-            phosphorus: 75,
-            potassium: 50,
-            notes: isUrdu
-                ? "بہتر فائبر کے معیار کے لیے پوٹاشیم میں اضافہ کریں۔ پھول آنے پر فولیئر اسپرے کریں۔"
-                : "Increase potassium for better fiber quality. Apply foliar spray at flowering",
-        },
-    };
-    return npkRatios[crop];
-};
+interface FertilizerProduct {
+    bags: number;
+    full_name: string;
+    cost_pkr: number;
+}
 
-export function FertilizerCard({ crop }: FertilizerCardProps) {
-    const { language } = useAgri();
+interface FertilizerCardData {
+    season_total: {
+        products: Record<string, FertilizerProduct>;
+        total_cost: number;
+        area?: number;
+    };
+    next_application: {
+        status: string;
+        products: FertilizerProduct[];
+        sub_stage?: string;
+        stage?: string;
+        timing_note?: string;
+        instructions?: string;
+        urgency?: string;
+    };
+}
+
+function extractFertilizerActionPlan(fertilizerCard: FertilizerCardData) {
+    const recommendation = fertilizerCard;
+    const products = recommendation.season_total.products;
+    const area = recommendation.season_total.area || 10; // default to 10 acres if not provided
+
+    let totalN = 0, totalP = 0, totalK = 0;
+    if (products.DAP) {
+        const dapKg = products.DAP.bags * 50;
+        totalN += dapKg * 0.18;
+        totalP += dapKg * 0.46;
+    }
+    if (products.Urea) {
+        const ureaKg = products.Urea.bags * 50;
+        totalN += ureaKg * 0.46;
+    }
+    if (products.MOP) {
+        const mopKg = products.MOP.bags * 50;
+        totalK += mopKg * 0.60;
+    }
+    const npk = {
+        nitrogen: Math.round(totalN / area),
+        phosphorus: Math.round(totalP / area),
+        potassium: Math.round(totalK / area)
+    };
+    const nextApp = recommendation.next_application;
+    let guidanceText = "";
+    if (nextApp.status === "DUE_NOW") {
+        guidanceText = `Apply ${nextApp.products[0]?.full_name || 'fertilizer'} now at ${nextApp.sub_stage || nextApp.stage} stage. `;
+        guidanceText += nextApp.timing_note || nextApp.instructions;
+    } else {
+        guidanceText = "Apply nitrogen in split doses: 30% at sowing, 40% at tillering, 30% at jointing";
+    }
+    return {
+        npkRatio: npk,
+        applicationGuidance: guidanceText,
+        nextApplication: {
+            stage: nextApp.sub_stage || nextApp.stage,
+            product: nextApp.products[0]?.full_name,
+            bags: nextApp.products[0]?.bags,
+            cost: nextApp.products[0]?.cost_pkr,
+            urgency: nextApp.urgency,
+            instructions: nextApp.instructions
+        },
+        totalSeasonCost: recommendation.season_total.total_cost
+    };
+}
+
+export function FertilizerCard({ crop, userId, area = 10 }: FertilizerCardProps) {
+    const { language, dashboardData, isDashboardLoading } = useAgri();
     const t = (key: any) => getTranslation(language, key);
-    const npkData = getNPKData(crop, language);
-    const total = npkData.nitrogen + npkData.phosphorus + npkData.potassium;
+
+    const fertilizerData = dashboardData?.fertilizer?.fertilizer_card;
+
+    if (isDashboardLoading && !dashboardData) {
+        return (
+            <Card className="border-[#E5E7EB] shadow-sm rounded-2xl animate-pulse h-64">
+                <CardHeader className="h-16 border-b border-gray-50" />
+                <CardContent className="h-48" />
+            </Card>
+        );
+    }
+
+    if (!fertilizerData) return null;
+
+    const plan = extractFertilizerActionPlan(fertilizerData);
+    const total = plan.npkRatio.nitrogen + plan.npkRatio.phosphorus + plan.npkRatio.potassium || 1;
 
     return (
         <Card className="border-[#E5E7EB] shadow-sm hover:shadow-md transition-shadow duration-300">
@@ -59,12 +121,12 @@ export function FertilizerCard({ crop }: FertilizerCardProps) {
                             <Leaf className="w-6 h-6 text-white" />
                         </div>
                         <p className="text-xs text-[#6B7280] mb-1">{t('nitrogen')}</p>
-                        <p className="text-2xl font-bold text-[#1B4332] font-heading">{npkData.nitrogen}</p>
+                        <p className="text-2xl font-bold text-[#1B4332] font-heading">{plan.npkRatio.nitrogen}</p>
                         <p className="text-xs text-[#6B7280]">{t('kgAcre')}</p>
                         <div className="mt-2 h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-[#1B4332] rounded-full"
-                                style={{ width: `${(npkData.nitrogen / total) * 100}%` }}
+                                style={{ width: `${(plan.npkRatio.nitrogen / total) * 100}%` }}
                             />
                         </div>
                     </div>
@@ -75,12 +137,12 @@ export function FertilizerCard({ crop }: FertilizerCardProps) {
                             <Mountain className="w-6 h-6 text-white" />
                         </div>
                         <p className="text-xs text-[#6B7280] mb-1">{t('phosphorus')}</p>
-                        <p className="text-2xl font-bold text-[#D4A373] font-heading">{npkData.phosphorus}</p>
+                        <p className="text-2xl font-bold text-[#D4A373] font-heading">{plan.npkRatio.phosphorus}</p>
                         <p className="text-xs text-[#6B7280]">{t('kgAcre')}</p>
                         <div className="mt-2 h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-[#D4A373] rounded-full"
-                                style={{ width: `${(npkData.phosphorus / total) * 100}%` }}
+                                style={{ width: `${(plan.npkRatio.phosphorus / total) * 100}%` }}
                             />
                         </div>
                     </div>
@@ -91,12 +153,12 @@ export function FertilizerCard({ crop }: FertilizerCardProps) {
                             <Droplets className="w-6 h-6 text-white" />
                         </div>
                         <p className="text-xs text-[#6B7280] mb-1">{t('potassium')}</p>
-                        <p className="text-2xl font-bold text-[#52B788] font-heading">{npkData.potassium}</p>
+                        <p className="text-2xl font-bold text-[#52B788] font-heading">{plan.npkRatio.potassium}</p>
                         <p className="text-xs text-[#6B7280]">{t('kgAcre')}</p>
                         <div className="mt-2 h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-[#52B788] rounded-full"
-                                style={{ width: `${(npkData.potassium / total) * 100}%` }}
+                                style={{ width: `${(plan.npkRatio.potassium / total) * 100}%` }}
                             />
                         </div>
                     </div>
@@ -105,7 +167,21 @@ export function FertilizerCard({ crop }: FertilizerCardProps) {
                 {/* Application Notes */}
                 <div className="p-3 bg-[#F8F9F1] rounded-lg border border-[#E5E7EB]">
                     <p className="text-xs text-[#6B7280] mb-1">{t('appGuidance')}</p>
-                    <p className="text-sm text-[#1F2937]">{npkData.notes}</p>
+                    <p className="text-sm text-[#1F2937]">{plan.applicationGuidance}</p>
+                </div>
+                {/* Next Application Details */}
+                <div className="p-3 bg-[#F0FDFA] rounded-lg border border-[#E5E7EB] mt-2">
+                    <p className="text-xs text-[#6B7280] mb-1">{t('nextApplication')}</p>
+                    <p className="text-sm text-[#1F2937]">
+                        {plan.nextApplication.product} ({plan.nextApplication.bags} bags) - Rs. {plan.nextApplication.cost}
+                        <br />Stage: {plan.nextApplication.stage} | Urgency: {plan.nextApplication.urgency}
+                        <br />Instructions: {plan.nextApplication.instructions}
+                    </p>
+                </div>
+                {/* Total Season Cost */}
+                <div className="p-3 bg-[#FFF7ED] rounded-lg border border-[#E5E7EB] mt-2">
+                    <p className="text-xs text-[#6B7280] mb-1">{t('totalSeasonCost')}</p>
+                    <p className="text-sm text-[#1F2937]">Rs. {plan.totalSeasonCost}</p>
                 </div>
             </CardContent>
         </Card>

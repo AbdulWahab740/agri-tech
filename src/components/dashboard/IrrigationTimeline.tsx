@@ -11,42 +11,6 @@ interface IrrigationTimelineProps {
 
 type DayStatus = "water" | "sun" | "rain";
 
-interface DayData {
-    day: string;
-    date: number;
-    status: DayStatus;
-    labelKey: string;
-}
-
-// Simulated weekly irrigation schedule
-const getIrrigationSchedule = (crop: Crop): DayData[] => {
-    const today = new Date();
-    const schedule: DayData[] = [];
-    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-    for (let i = 0; i < 7; i++) {
-        const current = new Date(today);
-        current.setDate(today.getDate() + i);
-
-        const dayName = days[current.getDay()];
-        const dateNum = current.getDate();
-
-        // Simple mock logic for status
-        // Irrigate on 1st and 4th day, Rain on 5th, Sun on others
-        let status: DayStatus = "sun";
-        if (i === 0 || i === 3) status = "water";
-        if (i === 4) status = "rain";
-
-        schedule.push({
-            day: dayName,
-            date: dateNum,
-            status,
-            labelKey: status === "water" ? "irrigate" : status === "rain" ? "rain" : "rest"
-        });
-    }
-    return schedule;
-};
-
 const statusConfig: Record<DayStatus, { icon: React.ReactNode; bg: string; iconColor: string; border: string }> = {
     water: {
         icon: <Droplets className="w-5 h-5" />,
@@ -69,17 +33,52 @@ const statusConfig: Record<DayStatus, { icon: React.ReactNode; bg: string; iconC
 };
 
 export function IrrigationTimeline({ crop }: IrrigationTimelineProps) {
-    const { language } = useAgri();
+    const { language, dashboardData, isDashboardLoading } = useAgri();
     const t = (key: any) => getTranslation(language, key);
-    const schedule = getIrrigationSchedule(crop);
 
-    const recommendedText = language === 'ur'
-        ? "مشورہ: صبح کی آبپاشی، 2-3 انچ گہرائی"
-        : "Recommended: Morning irrigation, 2-3 inches depth";
+    const data = dashboardData?.irrigation;
+
+    if (isDashboardLoading && !dashboardData) {
+        return (
+            <Card className="border-[#E5E7EB] shadow-sm">
+                <CardHeader className="pb-2">
+                    <CardTitle className="font-heading text-lg flex items-center gap-2">
+                        <div className="p-2 bg-agri-info/10 rounded-lg">
+                            <Droplets className="w-5 h-5 text-agri-info" />
+                        </div>
+                        {t('weeklyPlan')}
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="flex justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-agri-info" />
+                </CardContent>
+            </Card>
+        );
+    }
+
+    if (!data) {
+        return (
+            <Card className="border-[#E5E7EB] shadow-sm">
+                <CardHeader>
+                    <CardTitle className="font-heading text-lg flex items-center gap-2">
+                        <Droplets className="w-5 h-5 text-agri-info" />
+                        {t('weeklyPlan')}
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground text-sm">No irrigation data available.</p>
+                </CardContent>
+            </Card>
+        );
+    }
 
     const nextWaterText = language === 'ur'
-        ? "اگلا پانی: آج"
-        : "Next Water: Today";
+        ? `اگلا پانی: ${data.decision.includes('irrigate') ? 'آج' : 'ابھی ضرورت نہیں'}`
+        : `Next Water: ${data.decision.includes('irrigate') ? 'Today' : 'Not Needed'}`;
+
+    const recommendedText = language === 'ur'
+        ? `مشورہ: ${data.reason}، ${data.depth_inches} انچ، ${data.timing}`
+        : `Recommended: ${data.reason}, ${data.depth_inches} inches, ${data.timing}`;
 
     return (
         <Card className="border-[#E5E7EB] shadow-sm hover:shadow-md transition-shadow duration-300">
@@ -89,33 +88,49 @@ export function IrrigationTimeline({ crop }: IrrigationTimelineProps) {
                         <Droplets className="w-5 h-5 text-agri-info" />
                     </div>
                     {t('weeklyPlan')}
-                    {/* Dynamic date range could be added here if needed */}
                 </CardTitle>
             </CardHeader>
             <CardContent>
                 {/* Timeline */}
                 <div className="grid grid-cols-7 gap-2">
-                    {schedule.map((day, idx) => {
-                        const config = statusConfig[day.status];
+                    {data.weekly_plan.map((item: any, idx: number) => {
+                        const dateObj = new Date(item.day);
+                        const isValidDate = !isNaN(dateObj.getTime());
+                        const dayName = isValidDate
+                            ? dateObj.toLocaleDateString(language === 'ur' ? 'ur-PK' : 'en-US', { weekday: 'short' })
+                            : "—";
+                        const dateNum = isValidDate ? dateObj.getDate() : "—";
                         const isToday = idx === 0;
+
+                        let status: DayStatus = "sun";
+                        if (isToday) {
+                            if (data.decision.includes("irrigate")) status = "water";
+                            else if (data.decision.includes("rain")) status = "rain";
+                        } else {
+                            const rainValue = item.rain || "0mm";
+                            const rainMM = parseFloat(rainValue.replace('mm', '')) || 0;
+                            if (rainMM > 0.5) status = "rain";
+                        }
+
+                        const config = statusConfig[status];
 
                         return (
                             <div
                                 key={idx}
                                 className={`
-                  relative text-center p-3 rounded-xl transition-all duration-300
-                  ${config.bg} ${config.border} border
-                  ${isToday ? "ring-2 ring-primary ring-offset-2" : ""}
-                  hover:scale-105 cursor-pointer
-                `}
+                                    relative text-center p-2 md:p-3 rounded-xl transition-all duration-300
+                                    ${config.bg} ${config.border} border
+                                    ${isToday ? "ring-2 ring-primary ring-offset-2" : ""}
+                                    hover:scale-105 cursor-pointer
+                                `}
                             >
                                 {isToday && (
                                     <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-primary text-primary-foreground text-[10px] rounded-full font-medium">
                                         {t('today')}
                                     </span>
                                 )}
-                                <p className="text-xs text-[#6B7280] font-medium">{day.day}</p>
-                                <p className="text-sm font-bold text-[#1F2937] mb-2">{day.date}</p>
+                                <p className="text-[10px] text-[#6B7280] font-medium truncate">{dayName}</p>
+                                <p className="text-sm font-bold text-[#1F2937] mb-2">{dateNum}</p>
                                 <div className={`flex justify-center ${config.iconColor}`}>
                                     {config.icon}
                                 </div>

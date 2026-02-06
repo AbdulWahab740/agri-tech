@@ -2,9 +2,45 @@
 
 import { useAgri } from "@/context/AgriContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+function useTriggerRiskAssessment() {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const triggerAssessment = async (farmerId: string, context: any) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/dashboard/trigger-risk-assessment`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...(typeof window !== "undefined" && localStorage.getItem("access_token")
+                            ? { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
+                            : {}),
+                    },
+                    body: JSON.stringify({ farmer_id: farmerId, ...context }),
+                }
+            );
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || err.error || "Failed to trigger assessment");
+            }
+            // Optionally, refresh dashboard data here
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Failed to trigger assessment");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { triggerAssessment, loading, error };
+}
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { LiveClimatePanel } from "@/components/dashboard/LiveClimatePanel";
+import { WeatherForecastCard } from "@/components/dashboard/WeatherForecastCard";
 import { RiskAssessmentPanel } from "@/components/dashboard/RiskAssessmentPanel";
 import { FarmerSnapshot } from "@/components/dashboard/FarmerSnapshot";
 import { FertilizerCard } from "@/components/dashboard/FertilizerCard";
@@ -15,7 +51,8 @@ import { ChatButton } from "@/components/chat/ChatButton";
 import { getTranslation } from "@/lib/i18n";
 
 export default function DashboardPage() {
-    const { district, crop, isSelectionComplete, language, isLoaded } = useAgri();
+    const { district, crop, isSelectionComplete, language, isLoaded, cropStage, province } = useAgri();
+    const { triggerAssessment, loading: triggerLoading, error: triggerError } = useTriggerRiskAssessment();
     const router = useRouter();
 
     const t = (key: any) => getTranslation(language, key);
@@ -52,46 +89,59 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-[#F8F9F1]">
             <DashboardHeader />
 
-            <main className="container mx-auto px-4 py-6 lg:py-8">
+            <main className="container mx-auto px-4 py-8 lg:py-12">
                 {/* Section A: Farmer Snapshot */}
-                <FarmerSnapshot />
+                <section className="mb-10">
+                    <FarmerSnapshot />
+                </section>
 
                 {/* Section B & C: Climate & Risk */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
                     {/* Section B: Live Climate Panel */}
-                    <div className="space-y-4">
-                        <h2 className="font-heading text-xl font-semibold text-[#1B4332] flex items-center gap-2">
-                            <span className="w-1 h-6 bg-[#D4A373] rounded-full"></span>
+                    <div className="space-y-6">
+                        <h2 className="font-heading text-2xl font-bold text-[#1B4332] flex items-center gap-3">
+                            <span className="w-1.5 h-8 bg-[#D4A373] rounded-full"></span>
                             {t('liveClimate')}
                         </h2>
-                        <LiveClimatePanel />
+                        <div className="space-y-4">
+                            <LiveClimatePanel />
+                            <WeatherForecastCard />
+                        </div>
                     </div>
 
                     {/* Section C: Risk Assessment */}
-                    <div className="space-y-4">
-                        <h2 className="font-heading text-xl font-semibold text-[#1B4332] flex items-center gap-2">
-                            <span className="w-1 h-6 bg-[#E63946] rounded-full"></span>
+                    <div className="space-y-6">
+                        <h2 className="font-heading text-2xl font-bold text-[#1B4332] flex items-center gap-3">
+                            <span className="w-1.5 h-8 bg-[#E63946] rounded-full"></span>
                             {t('riskMonitoring')}
                         </h2>
                         <RiskAssessmentPanel />
                     </div>
                 </div>
 
-                {/* Legacy Sections: Action Plan & Guidance */}
-                <section className="mb-8">
-                    <h2 className="font-heading text-xl font-semibold text-[#1B4332] mb-4 flex items-center gap-2">
-                        <span className="w-1 h-6 bg-[#52B788] rounded-full"></span>
-                        {t('actionPlan')}
-                    </h2>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <FertilizerCard crop={crop!} />
+                {/* Section D: Fertilizer Monitoring & Irrigation Activity */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                    <div className="space-y-6">
+                        <h2 className="font-heading text-2xl font-bold text-[#1B4332] flex items-center gap-3">
+                            <span className="w-1.5 h-8 bg-[#52B788] rounded-full"></span>
+                            {t('FertilizerMonitoring')}
+                        </h2>
+                        <FertilizerCard crop={crop!} userId={typeof window !== 'undefined' ? localStorage.getItem('user_id') || '' : ''} />
+                    </div>
+
+                    <div className="space-y-6">
+                        <h2 className="font-heading text-2xl font-bold text-[#1B4332] flex items-center gap-3">
+                            <span className="w-1.5 h-8 bg-[#E63946] rounded-full"></span>
+                            {t('IrrigationActivity')}
+                        </h2>
                         <IrrigationTimeline crop={crop!} />
                     </div>
-                </section>
+                </div>
 
-                <section className="mb-8">
-                    <h2 className="font-heading text-xl font-semibold text-[#1B4332] mb-4 flex items-center gap-2">
-                        <span className="w-1 h-6 bg-[#1B4332] rounded-full"></span>
+                {/* Section E: Seasonal Guidance */}
+                <section className="mb-12">
+                    <h2 className="font-heading text-2xl font-bold text-[#1B4332] mb-6 flex items-center gap-3">
+                        <span className="w-1.5 h-8 bg-[#1B4332] rounded-full"></span>
                         {t('seasonalGuidance')}
                     </h2>
                     <SowingCalendar crop={crop!} district={district!} />

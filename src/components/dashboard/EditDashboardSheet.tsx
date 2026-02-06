@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Sprout, MapPin, Ruler, Wheat } from "lucide-react";
+import { Loader2, Sprout, MapPin, Ruler, Wheat, Droplet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import {
     Sheet,
     SheetContent,
@@ -15,12 +16,13 @@ import {
     SheetClose
 } from "@/components/ui/sheet";
 import { useAgri } from "@/context/AgriContext";
+
 import { cn } from "@/lib/utils";
 
 const PROVINCES = ["Punjab", "Sindh", "KPK", "Balochistan"];
 
 const DISTRICTS: Record<string, string[]> = {
-    Punjab: ["Lahore", "Multan", "Faisalabad", "Gujranwala", "Rawalpindi"],
+    Punjab: ["Lahore", "Multan", "Faisalabad", "Gujranwala", "Rawalpindi", "Khanewal", "Jhelum"],
     Sindh: ["Karachi", "Hyderabad", "Sukkur", "Larkana"],
     KPK: ["Peshawar", "Mardan", "Abbottabad", "Swat"],
     Balochistan: ["Quetta", "Gwadar", "Turbat", "Khuzdar"],
@@ -29,6 +31,8 @@ const DISTRICTS: Record<string, string[]> = {
 const CROPS = ["Wheat", "Rice", "Cotton", "Sugarcane", "Maize"];
 const STAGES = ["Sowing", "Vegetative", "Flowering", "Harvest"];
 const SIZES = ["Small (< 5 acres)", "Medium (5-25 acres)", "Large (> 25 acres)"];
+const IRRIGATION_TYPES = ["Canal", "Tubewell", "Drip", "Sprinkler", "Rainfed"];
+const SOIL_TYPES = ["Clay", "Sandy", "Loam", "Silt", "Peat"];
 
 interface EditDashboardSheetProps {
     open: boolean;
@@ -42,20 +46,28 @@ export function EditDashboardSheet({ open, onOpenChange }: EditDashboardSheetPro
         crop,
         cropStage,
         farmSize,
+        irrigation_type,
+        soil_type,
         setDistrict,
         setProvince,
         setCrop,
         setCropStage,
-        setFarmSize
+        setFarmSize,
+        setIrrigationType,
+        setSoilType,
     } = useAgri();
 
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
     const [formData, setFormData] = useState({
         crop: crop || "",
         province: province || "",
         district: district || "",
         farmSize: farmSize || "",
         cropStage: cropStage || "",
+        irrigationType: irrigation_type || "",
+        soilType: soil_type || "",
     });
 
     // Update form data when context changes or sheet opens
@@ -67,30 +79,70 @@ export function EditDashboardSheet({ open, onOpenChange }: EditDashboardSheetPro
                 district: district || "",
                 farmSize: farmSize || "",
                 cropStage: cropStage || "",
+                irrigationType: irrigation_type || "",
+                soilType: soil_type || "",
             });
+            setError(null);
         }
-    }, [open, crop, province, district, farmSize, cropStage]);
+    }, [open, crop, province, district, farmSize, cropStage, irrigation_type, soil_type]);
 
     const handleProvinceChange = (value: string) => {
         setFormData({ ...formData, province: value, district: "" });
     };
 
     const handleSubmit = async () => {
+        if (typeof window === "undefined") return;
         setIsLoading(true);
-        try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 500));
+        setError(null);
 
-            // Update Context
+        try {
+            const apiPayload = {
+                province: formData.province,
+                district: formData.district,
+                crop: formData.crop,
+                stage: formData.cropStage,
+                irrigation_type: formData.irrigationType,
+                soil_type: formData.soilType,
+                area: parseInt(formData.farmSize) || 0,
+            };
+
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/dashboard/profile`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...(localStorage.getItem("access_token")
+                            ? { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
+                            : {}),
+                    },
+                    body: JSON.stringify(apiPayload),
+                }
+            );
+
+            if (res.status === 401) {
+                localStorage.removeItem("access_token");
+                window.location.href = "/login";
+                return;
+            }
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || err.error || "Failed to update profile");
+            }
+
+            // Update Context on success
             if (formData.province) setProvince(formData.province);
             if (formData.district) setDistrict(formData.district);
             if (formData.crop) setCrop(formData.crop);
             if (formData.cropStage) setCropStage(formData.cropStage);
             if (formData.farmSize) setFarmSize(formData.farmSize);
+            if (formData.irrigationType) setIrrigationType(formData.irrigationType);
+            if (formData.soilType) setSoilType(formData.soilType);
 
             onOpenChange(false);
         } catch (error) {
-            console.error("Update failed", error);
+            setError(error instanceof Error ? error.message : "Update failed");
         } finally {
             setIsLoading(false);
         }
@@ -118,6 +170,11 @@ export function EditDashboardSheet({ open, onOpenChange }: EditDashboardSheetPro
                 </SheetHeader>
 
                 <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+                    {error && (
+                        <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm mb-4">
+                            {error}
+                        </div>
+                    )}
                     {/* Location Section */}
                     <div className="bg-background rounded-xl border border-border/50 shadow-sm p-5 space-y-4 hover:shadow-md transition-shadow duration-300">
                         <div className="flex items-center gap-3 pb-2 border-b border-border/50">
@@ -206,10 +263,52 @@ export function EditDashboardSheet({ open, onOpenChange }: EditDashboardSheetPro
                         </div>
                     </div>
 
-                    {/* Farm Size Section */}
+                    {/* Resources Section */}
                     <div className="bg-background rounded-xl border border-border/50 shadow-sm p-5 space-y-4 hover:shadow-md transition-shadow duration-300">
                         <div className="flex items-center gap-3 pb-2 border-b border-border/50">
                             <div className="p-2 bg-blue-100 rounded-full text-blue-700">
+                                <Droplet className="w-4 h-4" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-sm text-foreground">Methods & Soil</h3>
+                                <p className="text-xs text-muted-foreground">Precision management</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Irrigation Type</Label>
+                                <Select onValueChange={(val) => setFormData({ ...formData, irrigationType: val })} value={formData.irrigationType}>
+                                    <SelectTrigger className="bg-muted/30 border-blue-200">
+                                        <SelectValue placeholder="Select Type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {IRRIGATION_TYPES.map((t) => (
+                                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Soil Type</Label>
+                                <Select onValueChange={(val) => setFormData({ ...formData, soilType: val })} value={formData.soilType}>
+                                    <SelectTrigger className="bg-muted/30 border-orange-200">
+                                        <SelectValue placeholder="Select Soil" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {SOIL_TYPES.map((s) => (
+                                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Farm Size Section */}
+                    <div className="bg-background rounded-xl border border-border/50 shadow-sm p-5 space-y-4 hover:shadow-md transition-shadow duration-300">
+                        <div className="flex items-center gap-3 pb-2 border-b border-border/50">
+                            <div className="p-2 bg-purple-100 rounded-full text-purple-700">
                                 <Ruler className="w-4 h-4" />
                             </div>
                             <div>
@@ -220,16 +319,13 @@ export function EditDashboardSheet({ open, onOpenChange }: EditDashboardSheetPro
 
                         <div className="space-y-2">
                             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Area</Label>
-                            <Select onValueChange={(val) => setFormData({ ...formData, farmSize: val })} value={formData.farmSize}>
-                                <SelectTrigger className="bg-muted/30 border-primary/20 focus:ring-primary/20">
-                                    <SelectValue placeholder="Select Farm Size" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {SIZES.map((s) => (
-                                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Input
+                                type="number"
+                                placeholder="Enter the area in acres (e.g., 10)"
+                                value={formData.farmSize}
+                                onChange={(e) => setFormData({ ...formData, farmSize: e.target.value })}
+                                className="h-11 bg-white border-gray-200 focus:ring-primary/20 focus:border-primary transition-all"
+                            />
                         </div>
                     </div>
                 </div>
