@@ -46,6 +46,25 @@ export default function LoginPage() {
                 return;
             }
 
+            // FAKE LOGIN BYPASS
+            if (formData.email === "admin@agritech.com" && formData.password === "admin") {
+                localStorage.setItem("access_token", "fake-token-123");
+                localStorage.setItem("user_id", "fake-user-123");
+                localStorage.setItem("user_email", "admin@agritech.com");
+                localStorage.setItem("username", "Admin User");
+
+                // Set fake profile data
+                setDistrict("Lahore");
+                setProvince("Punjab");
+                setCrop("Wheat");
+                setCropStage("Vegetative");
+                setFarmSize("Medium (5-25 acres)");
+
+                // Force reload to dashboard which handles the rest
+                window.location.href = "/dashboard";
+                return;
+            }
+
             const response = await apiClient.post("/auth/login", {
                 email: formData.email,
                 password: formData.password,
